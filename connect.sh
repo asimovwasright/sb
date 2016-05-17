@@ -29,13 +29,22 @@ sleep 30
 if ping -c5 8.8.8.8 || ping -c5 83.81.90.114
 then
   # Clearly working
-  touch "$WPATH"/Connect-Working
+  if git pull origin master
+  then
+    printf "\n$(timestamp) GIT Repo Retrieved" >> /home/sbadmin/sb.log
+  else
+    printf "\n$(timestamp) Could not update framework from GIT" >> /home/sbadmin/sb.log
+  fi
 else
   report "Connect Failed" "Tried to connect, but cannot create connection."
 fi
 
 
-# Start the player going before doing anything else, everything else can be done in the background.
+# Run Primary, since the device has just booted, and we don't know how long it has been down for.
+
+bash -c '/home/sbadmin/primary.sh'
+
+# Once PRIMARY has configured the box, we should be able to play.
 
 (bash -c '/home/sbadmin/player.sh &')
 
@@ -47,9 +56,5 @@ else
  printf "\n$(timestamp) Failed to start Player" >>/home/sbadmin/sb.log
  report "Couldn't start Player" "Tried to start the player after Connect.sh ran, but it did not work..."
 fi
-
-# Run Primary, since the device has just booted, and we don't know how long it has been down for.
-
-bash -c '/home/sbadmin/primary.sh &'
 
 exit 0
