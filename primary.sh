@@ -42,9 +42,15 @@ confCHK()
       printf "OK" > /home/sbadmin/ERR1.stat
       printf "\n$(timestamp) Config Received" >> /home/sbadmin/sb.log
     else
-      printf "Failed to Retrieve, Exiting... $(timestamp)" > /home/sbadmin/ERR1.stat
+      if haleControl
+      then
+	printf "\n$(timestamp) Failed to retrieve Config, Haled Control!" >> /home/sbadmin/sb.log
+        report "Haled Control" "Haled Control, on account of no conf file found. $(timestamp) \n $(cat $ftplogConf)"
+      else
+	report "Failed To Hale" "Tried to retrieve the conf file, but couldn't, tried to Hale Control, but failed... $(timestamp) \n $(cat $ftplogConf)"
+      fi
+      printf "No Conf, Exiting... $(timestamp)" > /home/sbadmin/ERR1.stat
       printf "\n$(timestamp) Failed to retrieve Config" >> /home/sbadmin/sb.log
-      report "Failed To Get CONF" "Tried to retrieve the conf file, but couldn't. $(timestamp) \n $(cat $ftplogConf)"
       printf "\n\n\n----------- $(timestamp) END PRIMARY ------------\n\n\n" >>/home/sbadmin/sb.log
       printf "\n\n\n----------- $(timestamp) END PRIMARY ------------\n\n\n" >>/home/sbadmin/playlist.log
       printf "\n\n\n----------- $(timestamp) END PRIMARY ------------\n\n\n" >>$ftpmasterlog
@@ -85,6 +91,40 @@ confCHK()
   else
   confchk="OK"
   fi
+
+}
+
+haleControl()
+{
+  # In case the conf was not obtainable, it could be that this device is new, and there isn't one yet.
+  #+ So, let's place a file on the FTP server to say that this device is ready and waiting.
+
+  printf "DEVICE READY! \n Username: $username" >$WPATH/READY_$username
+
+ftp -i -v silver-box.co.za << _UPLOAD_ >$ftplogConf
+cd CONF
+put READY_$username
+bye
+_UPLOAD_
+
+  grep "226-File successfully transferred" $ftplogHale
+  if [ $? != 0 ]
+  then
+    F101=fail
+    cat $ftplogHale >> $ftpmasterlog
+  else
+    F101=ok
+    cat $ftplogHale >> $ftpmasterlog
+    rm $ftplogHale
+  fi
+
+  if [ "$F101" = "ok" ]
+  then
+    return 0
+  else
+    return 1
+  fi
+
 
 }
 
