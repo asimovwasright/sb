@@ -159,7 +159,7 @@ propagate()
   #+ then download any files that are not in the LIBRARY/
 
   # First Remove the NO_CHANNEL file if is exists
-  rm $WPATH/channels/NO-CHANNEL
+  rm $WPATH/channels/NO_CHANNELS
 
 
   # Loop through all playlists one by one.
