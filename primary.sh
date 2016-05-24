@@ -12,12 +12,15 @@
 #+ ERR1 relates to the Config INI file. Error message will always be descriptive, and accompanied with a report sent to Admin.
 #+ ERR2 relates to the PlayList.
 
+set -x
+
 username="$(ip addr show eth0 | grep link/ether | awk '{print $2}' | sha1sum | awk '{print $1}')"
 ftpmasterlog="/home/sbadmin/ftpLOG"
 conf="/home/sbadmin/sb.conf"
 WPATH="/home/sbadmin"
 
 ############################### FUNCTIONS ########################################################
+
 
 timestamp()
 {
@@ -70,6 +73,14 @@ confCHK()
     then
       confchk="OK"
     else
+      if haleControl
+      then
+        printf "\n$(timestamp) Failed to retrieve Config, Haled Control!" >> /home/sbadmin/sb.log
+        report "Haled Control" "Haled Control, on account of no conf file found. $(timestamp) \n $(cat $ftplogConf)"
+      else
+        report "Failed To Hale" "Tried to retrieve the conf file, but couldn't, tried to Hale Control, but failed... $(timestamp) \n $(cat $ftplogConf)"
+      fi
+
       printf "\nFailed to Retrieve, Exiting... $(timestamp)" >> /home/sbadmin/ERR1.stat
       printf "\n$(timestamp) Failed to retrieve Config" >> /home/sbadmin/sb.log
       report "Failed To Get CONF" "Tried to retrieve the conf file, but couldn't. $(timestamp) \n $(cat $ftplogConf)"
@@ -101,7 +112,10 @@ haleControl()
 
   printf "DEVICE READY! \n Username: $username" >$WPATH/READY_$username
 
-ftp -i -v silver-box.co.za << _UPLOAD_ >$ftplogConf
+  # FTP to central and get the conf file.
+  ftplogHale="/home/sbadmin/ftplogHaleUp"
+
+ftp -i -v silver-box.co.za << _UPLOAD_ >$ftplogHale
 cd CONF
 put READY_$username
 bye
@@ -124,8 +138,6 @@ _UPLOAD_
   else
     return 1
   fi
-
-
 }
 
 getConf()
@@ -336,5 +348,7 @@ fi
   printf "\n\n\n----------- $(timestamp) END PRIMARY ------------\n\n\n" >>/home/sbadmin/sb.log
   printf "\n\n\n----------- $(timestamp) END PRIMARY ------------\n\n\n" >>/home/sbadmin/playlist.log
   printf "\n\n\n----------- $(timestamp) END PRIMARY ------------\n\n\n" >>$ftpmasterlog
+
+set +x
 
 exit 0
