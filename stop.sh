@@ -51,8 +51,6 @@ then
   echo FALSE>/home/sbadmin/PLAYSTATE
   printf "\n$(timestamp) HARD STOP! Stopping Without Delay" >> /home/sbadmin/player.log
   sudo /home/sbadmin/skip.sh
-  sleep 2
-  echo TRUE>/home/sbadmin/PLAYSTATE
   exit 0
 else
   echo FALSE>/home/sbadmin/PLAYSTATE

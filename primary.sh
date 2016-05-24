@@ -12,12 +12,12 @@
 #+ ERR1 relates to the Config INI file. Error message will always be descriptive, and accompanied with a report sent to Admin.
 #+ ERR2 relates to the PlayList.
 
-set -x
 
 username="$(ip addr show eth0 | grep link/ether | awk '{print $2}' | sha1sum | awk '{print $1}')"
 ftpmasterlog="/home/sbadmin/ftpLOG"
 conf="/home/sbadmin/sb.conf"
 WPATH="/home/sbadmin"
+ip="$(ip addr show eth0 | grep inet | grep global | awk '{print $2}')"
 
 ############################### FUNCTIONS ########################################################
 
@@ -33,6 +33,42 @@ report()
   printf "\n--------Report Entry $(timestamp)-----------\n\nSubject: $1 \nContent: $2 \nUsername: $username\n\n---------------------- END -----------------------\n">>/home/sbadmin/REPORT
 }
 
+updateControl()
+{
+  # This function can mutitask to update the control of any info necessary.
+  # Where $1 is the info to be uploaded, and $2 is the file name addition.
+
+  printf "$(timestamp) \n $1 \n Username: $username" >$WPATH/$username.$2.info
+
+  # FTP to central and get the conf file.
+  ftplogUpdate="/home/sbadmin/ftplogUpldate"
+
+ftp -i -v silver-box.co.za << _UPLOAD_ >$ftplogUpdate
+cd CONF
+put $username.$2.info
+bye
+_UPLOAD_
+
+  grep "226-File successfully transferred" $ftplogUpdate
+  if [ $? != 0 ]
+  then
+    F101=fail
+    cat $ftplogUpdate >> $ftpmasterlog
+  else
+    F101=ok
+    cat $ftplogUpdate >> $ftpmasterlog
+    rm $ftplogUpdate
+  fi
+
+  if [ "$F101" = "ok" ]
+  then
+    return 0
+  else
+    return 1
+  fi
+
+
+}
 
 confCHK()
 {
@@ -76,9 +112,8 @@ confCHK()
       if haleControl
       then
         printf "\n$(timestamp) Failed to retrieve Config, Haled Control!" >> /home/sbadmin/sb.log
-        report "Haled Control" "Haled Control, on account of no conf file found. $(timestamp) \n $(cat $ftplogConf)"
       else
-        report "Failed To Hale" "Tried to retrieve the conf file, but couldn't, tried to Hale Control, but failed... $(timestamp) \n $(cat $ftplogConf)"
+        report "Failed To Hale" "Tried to retrieve the conf file, but couldn't, tried to Hale Control, but failed... $(timestamp) \n $(cat $ftplogHale)"
       fi
 
       printf "\nFailed to Retrieve, Exiting... $(timestamp)" >> /home/sbadmin/ERR1.stat
@@ -110,7 +145,7 @@ haleControl()
   # In case the conf was not obtainable, it could be that this device is new, and there isn't one yet.
   #+ So, let's place a file on the FTP server to say that this device is ready and waiting.
 
-  printf "DEVICE READY! \n Username: $username" >$WPATH/READY_$username
+  printf "DEVICE READY! \n Username: $username \n IP: $ip" >$WPATH/READY_$username
 
   # FTP to central and get the conf file.
   ftplogHale="/home/sbadmin/ftplogHaleUp"
@@ -323,7 +358,17 @@ printf "\n\n\n----------- $(timestamp) BEGIN PRIMARY ------------\n\n\n" >>/home
 printf "\n\n\n----------- $(timestamp) BEGIN PRIMARY ------------\n\n\n" >>/home/sbadmin/playlist.log
 printf "\n\n\n----------- $(timestamp) BEGIN PRIMARY ------------\n\n\n" >>$ftpmasterlog
 
-# First check config:
+# Update the control with IP
+
+if updateControl "IP Address of UI is currently: $ip" "UI-IP"
+then
+  printf "\n$(timestamp) Updated Control with IP: $ip" >> /home/sbadmin/sb.log
+else
+  printf "\n$(timestamp) WARNING! Couldn't update control with IP info... $ip" >> /home/sbadmin/sb.log
+  report "Config Failure" "Tried to update the IP info to Control, but failed.. \n $(cat $ftplogUpdate)"
+fi
+
+# Now check config:
 
 confCHK
 
@@ -349,6 +394,5 @@ fi
   printf "\n\n\n----------- $(timestamp) END PRIMARY ------------\n\n\n" >>/home/sbadmin/playlist.log
   printf "\n\n\n----------- $(timestamp) END PRIMARY ------------\n\n\n" >>$ftpmasterlog
 
-set +x
 
 exit 0
