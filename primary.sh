@@ -158,6 +158,10 @@ propagate()
   # Compare the new playlists which have been downloaded already from conf file with the current channels directory,
   #+ then download any files that are not in the LIBRARY/
 
+  # First Remove the NO_CHANNEL file if is exists
+  rm $WPATH/channels/NO-CHANNEL
+
+
   # Loop through all playlists one by one.
   while read playlist
   do
@@ -181,11 +185,6 @@ propagate()
         printf "$line\n" >>/home/sbadmin/wishList
       fi
     done <"$listNew"
-
-    # Now we have removed all files from respective playlisDir that are not in the
-    #+ new playlist, and added files that are in the LIBRARY but not playlistDir
-    #+ that are on the new playlist. Now we can start downloading the missing
-    #+ files and add them to both LIBRARY and playlistDir.
 
     queue="/home/sbadmin/wishList"
 
@@ -255,6 +254,8 @@ _DOWNLOAD_
   done <$WPATH/channels-list
 
   $WPATH/channelBox.sh "$(cat $WPATH/CHANNEL)" # Force the re-write of channel options on the UI
+
+  $WPATH/jingleUpload.sh # Force the re-write of jingles option list.
 
   sudo mv --force $WPATH/NEWchannels-list $WPATH/channels-list
   rm $WPATH/All-lists $WPATH/*.txt
