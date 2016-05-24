@@ -26,18 +26,18 @@ report()
 
 sleep 30
 
-if ping -c5 8.8.8.8 || ping -c5 83.81.90.114
-then
-  # Clearly working
-  if git pull origin master
-  then
-    printf "\n$(timestamp) GIT Repo Retrieved" >> /home/sbadmin/sb.log
-  else
-    printf "\n$(timestamp) Could not update framework from GIT" >> /home/sbadmin/sb.log
-  fi
-else
-  report "Connect Failed" "Tried to connect, but cannot create connection."
-fi
+#if ping -c5 8.8.8.8 || ping -c5 83.81.90.114
+#then
+#  # Clearly working
+#  if git pull origin master
+#  then
+#    printf "\n$(timestamp) GIT Repo Retrieved" >> /home/sbadmin/sb.log
+#  else
+#    printf "\n$(timestamp) Could not update framework from GIT" >> /home/sbadmin/sb.log
+#  fi
+#else
+#  report "Connect Failed" "Tried to connect, but cannot create connection."
+#fi
 
 
 # Run Primary, since the device has just booted, and we don't know how long it has been down for.

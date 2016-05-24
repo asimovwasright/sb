@@ -40,7 +40,7 @@ report()
 playstate()
 {
   current="$(cat $WPATH/PLAYSTATE)"
-  if [ ! "$current" = 'FALSE' ]
+  if [ "$current" = 'TRUE' ]
   then
     return 0
   else
