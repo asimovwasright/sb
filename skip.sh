@@ -11,6 +11,7 @@ printf $(date +%d-%m-%y[%H:%M:%S])
 
 printf "\n$(timestamp) Manual SKIP button pressed" >>$playerLOG
 
-sudo kill -9 "$(pgrep 'omxplayer.bin')"
+# sudo kill -9 "$(pgrep 'omxplayer.bin')"
+sudo kill -9 "$(pgrep 'mpg123')"
 
 exit 0

@@ -40,7 +40,7 @@ report()
 playstate()
 {
   current="$(cat $WPATH/PLAYSTATE)"
-  if [ "$current" = 'TRUE' ]
+  if [ "$current" = 'TRUE' ] || [ "$current" = "PAUSED" ]
   then
     return 0
   else
@@ -242,7 +242,7 @@ playSong()
   if find "$WPATH/LIBRARY" -name "$1"
   then
 #    sudo mv /root/omxplayer.log $WPATH/trackLOGS/$(timestamp).txt # Grab the previous log and move to directory.
-    PLAYER="sudo omxplayer --no-osd" # -g for logging
+    PLAYER="mpg123" # -g for logging
     writeTrackInfo "$1" &
     $PLAYER "$WPATH/LIBRARY/$1"
     return true
