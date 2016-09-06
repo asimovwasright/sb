@@ -354,6 +354,9 @@ _DOWNLOAD_
 
 	###  Main Procedure ###
 
+# Hack to get passed GITs annoying untracking of permissions changes...
+sudo chmod 777 $WPATH/chk.dat
+
 printf "\n\n\n----------- $(timestamp) BEGIN PRIMARY ------------\n\n\n" >>/home/sbadmin/sb.log
 printf "\n\n\n----------- $(timestamp) BEGIN PRIMARY ------------\n\n\n" >>/home/sbadmin/playlist.log
 printf "\n\n\n----------- $(timestamp) BEGIN PRIMARY ------------\n\n\n" >>$ftpmasterlog
